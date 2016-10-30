@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hi d3.js!</title>
+    <script src="https://cdn.bootcss.com/codemirror/5.20.2/codemirror.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/codemirror/5.20.2/codemirror.css">
+    <script src="https://cdn.bootcss.com/codemirror/5.20.2/mode/xml/xml.js"></script>
+    <script src="https://cdn.bootcss.com/codemirror/5.20.2/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="https://cdn.bootcss.com/codemirror/5.20.2/mode/javascript/javascript.js"></script>
+    <style>
+        /* editor auto resizing */
+        .CodeMirror {
+            border: 1px solid #eee;
+            height: auto;
+        }
+        .preview {
+            margin: 10px 0px 10px 0px;
+            border: groove;
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <h1>0. 这是什么?</h1>
+    <p>这是我个人的一个d3.js学习笔记. 现在有很多不错的d3.js教材, 网络上也有着很多相关的博客, 所以讲道理本来再写一些文章来介绍d3.js没什么意义. 但是所谓的博客就是这样: 看别人的博客很烂, 于是就决定自己写一个更烂的来恶心别人. 于是乎就有了你现在看到的这个东西. 除了这个理由以外, 由于d3.js是一个高度视觉化的东西, 我还试图把源代码和实现效果一起呈现出来, 同时还允许读者当场修改代码来做实验. 所以懒得自己动手码代码甚至下载源代码的人有福了. (当然, 事实证明光看是没有用的. 你们如果真的想学的话, 相信我你们中的某些人可能也会写一个博客出来恶心我的. 非常欢迎这样的同学哈哈)</p>
+    <p>本文的主要内容来自于<em>Interactive Data Visualization for the Web</em>这本书. 本文在保持原作主要内容的情况下, 对书的内容进行了再加工, 并加入了一些我认为比较重要的补充信息.</p>
+</div>
+
+<div>
+    <h1>1. 准备工作</h1>
+    <p>只要引入d3.js文件就可以了. 这和其他大多数js库的引入方式并没有什么区别. 我们稍微输出一点东西来证明我们的环境已经部署成功了:</p>
+    <textarea class="code">
+        <html>
+            <head></head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    d3.select("body").append("p").text("New paragraph!");
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>如果你能看见上面的框中输出了一行字,说明d3环境已经顺利部署完成. 我们可以正式开始学习d3了!</p>
+    <p>这里演示了一个用d3实现的基本DOM操作. 全局变量d3是从d3库里面加载而来的. 在body 下面添加了一个p元素并设置了文本内容. 很好理解就不作过多解释了.</p>
+</div>
+
+<div>
+    <h1>2. 数据绑定</h1>
+    <p>我们之前看到的例子是一个完全静态的例子. 我们现在想把任意一组数据给展现出来, 这就需要用到数据绑定了. 其实就是把数据关联到某种展现方式上. 例子如下:</p>
+    <textarea class="code">
+        <html>
+            <head></head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [10, 25, 33, 16, 100, 14]; // 随机数据
+                    d3.select("body")
+                            .selectAll("p")     // 选择所有body下面的p元素, 现在选出来的选择集是空的
+                            .data(dataset)      // 将数据关联到(空)选择集上面
+                            .enter()            // 非常关键的一步, 为没有元素对应的数据创建一个占位元素
+                            .append("p")        // 向占位元素中填充实际的元素
+                            .text(function(d){  // 使用回调函数的方式填充文本内容
+                                return d;       // 返回数据本身
+                            });
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>在这里我们把一个数组给转化成了一堆p元素, 而元素内部的文本就是数组内的各个数字. 需要专门说一下的是enter()方法. 当我们把数据集绑定到元素集上面的时候, 两者很可能不是一一对应的. 在现在这个例子中, 数据集有6个数据, 但是元素集是空的. 这个时候我们就需要为哪些没有对应元素的数据创建html元素, 而完成这个功能的方法就是enter().</p>
+    <p>具体而言, enter()方法的作用的是, 为当前选择集中没有绑定元素的数据创建一个占位元素. 这个占位元素实际上指向的是当前要插入元素的父元素(在这个例子中其实就是body元素). 所以接下来调用append("p")其实就是向body元素中插入p元素,并返回插入的p元素. 接下来的事情就很简单了, 设置文本的时候可以指定一个回调函数. 回调函数的入参就是这个元素对应的数据项(datum), 你可以做任何处理以后返回, 我在这里什么也没做就返回了, 目的其实就是为了取得数据项本身. 在完成绑定后, 数据被存储到了对应元素的__data__字段上.</p>
+    <p>除了设置文本以外, 还可以添加attributes或者style, 比如我们想让奇数序号的数据显示成红色, 偶数序号的数字显示成蓝色, 可以这样干:</p>
+    <textarea class="code">
+        <html>
+            <head></head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [10, 25, 33, 16, 100, 14]; // 随机数据
+                    d3.select("body")
+                            .selectAll("p")     // 选择所有body下面的p元素, 现在选出来的选择集是空的
+                            .data(dataset)      // 将数据关联到(空)选择集上面
+                            .enter()            // 非常关键的一步, 为没有元素对应的数据创建一个占位元素
+                            .append("p")        // 向占位元素中填充实际的元素
+                            .text(function(d){  // 使用回调函数的方式填充文本内容
+                                return d;       // 返回数据本身
+                            })
+                            .attr('style', function(d, i){
+                                if( i%2 == 0 ) return 'color: blue';
+                                return 'color: red';
+                            })                  // 使用attr()设置style
+                            .style('color', function(d, i){
+                                if( i%2 == 0 ) return 'blue';
+                                return 'red';
+                            });                 // 如果只是想设置style的话也可以直接使用style()语法糖来直接设置. 这两句话在功能上是等价的, 这里重复设置了
+                </script>
+            </body>
+        </html>
+    </textarea>
+</div>
+
+<div>
+    <h1>3. 简单绘图</h1>
+    <p>我们已经学习了如何进行数据绑定了. 现在我们回头想想, 一个图表到底怎么画? 很简单, 其实使用html元素的堆砌就可以了. 对于任何一个了解前端的程序员来说都是已经知道的东西. 不相信的话我们试试看.</p>
+    <textarea class="code">
+        <html>
+            <head>
+                <style>
+                    .bar{
+                        display: inline-block; /* 让bar元素可以横向排放,方式可以设置高度. 所以这里只能使用inline-block */
+                        width: 20px;
+                        height: 75px;
+                        background-color: teal; /* 设置一个底色方便查看 */
+                        margin-right: 1px; /* 稍微空开一点距离, 否则会连成一片 */
+                    }
+                </style>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [10, 25, 33, 16, 50, 14];
+                    d3.select("body")
+                            .selectAll("p")
+                            .data(dataset)
+                            .enter()
+                            .append("div")
+                            .attr("class", "bar")
+                            .style('height', function(d){
+                                return d + 'px'; // 使用对应数值作为高度
+                            });
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>搞定. 其实就是把数据映射到了某个长度的div上面了而已. 由于每个div都是inline-block的, 整行的高度由最高的那个元素决定, 其他的元素就全部紧贴行底排列了.</p>
+</div>
+
+<br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br />
+
+<script>
+    function resizeIframe(obj){
+        obj.style.height = 0;
+        obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+    }
+
+    // To make code in tutorial source looks better,
+    // demo code are also indented
+    // However, these indentations will result in some extra blanks
+    // in source editors on the web pages seem by readers
+    // So these indentations should be removed before shown in source editors
+    function eliminate_extra_indent(code){
+        // currently only white spaces are supported
+        // so do not use tab in code indentation
+        var indent = code.match(/^((?: )*)\S/)[1];
+        // delete the first indent immediately
+        code = code.replace(/^( )*(?=\S)/, '');
+        var regex = new RegExp('\\n' + indent, 'g');
+        return code.replace(regex, '\n');
+    }
+
+    var codeBlocks = document.querySelectorAll('.code');
+    for(var i=0; i<codeBlocks.length; i++){
+        var block = codeBlocks[i];
+        block.textContent = eliminate_extra_indent(block.textContent);
+
+        var html = block.textContent;
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('srcdoc', html);
+        iframe.setAttribute('onload', 'resizeIframe(this)');
+        iframe.setAttribute('width', '100%');
+        iframe.classList.add('preview');
+
+        if (block.parentNode) {
+            block.parentNode.insertBefore(iframe, block.nextSibling);
+        }
+        var mirror = CodeMirror.fromTextArea(block, {
+            lineNumbers: true,
+            mode: "htmlmixed"
+        });
+
+        mirror.on('change', function(){
+            var html = mirror.getValue();
+            iframe.src = 'data:text/html;charset=utf-8,' + encodeURI(html);
+        });
+    }
+</script>
+</body>
+</html>
