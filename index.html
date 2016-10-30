@@ -189,7 +189,7 @@
             </body>
         </html>
     </textarea>
-    <p>svg本身也是一个html标签. 在svg标签里面可以通过添加svg元素来实现矢量绘图, 包括使用属性直接指定坐标,大小, 颜色等信息. 看起来和上一个例子一模一样, 但是我们由于已经拿svg重写了, 所以后面如果要加内容的话就可以通过添加svg元素的方式来实现, 相对于通用的html元素来说, 因为不再需要考虑布局方式等问题, 使用svg元素来绘图要方便得多. svg元素在很多用词上和css相同, 因此还是很容易学习的.</p>
+    <p>svg本身也是一个html标签. 在svg标签里面可以通过添加svg元素来实现矢量绘图, 包括使用属性直接指定坐标,大小, 颜色等信息. 看起来和上一个例子一模一样, 但是我们由于已经拿svg重写了, 所以后面如果要加内容的话就可以通过添加svg元素的方式来实现, 相对于通用的html元素来说, 因为不再需要考虑布局方式等问题, 使用svg元素来绘图要方便得多. svg元素在很多用词上和css相同或相似, 因此还是很容易学习的.</p>
     <p>现在我们来给柱状图添加标签, 以此来表示每条的值是多少(当前我们只能用长度来表示数值,不够精确):</p>
     <textarea class="code">
         <html>
@@ -343,6 +343,102 @@
     </textarea>
     <p>这样六个点就全部显示出来了. 之所以有些点只显示了一部分是因为圆是使用圆心来指定坐标的. 我们保证的只是圆心经过比例尺的转换后能放进svg里面.</p>
     <p>我们在这里只讨论了线性比例尺. 其他类型的比例尺(比如平方根比例尺或者序数比例尺)可以参考相关文档.</p>
+</div>
+
+<div>
+    <h1>6. 数轴</h1>
+    <p>说到绘制图标, 数轴在很多图里面是必须的. 在这一节我们将介绍怎么画数轴, 我们给上一节的散点图中加上数轴:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [
+                        [5, 20], [480, 90], [250, 50],
+                        [100, 33], [330, 95], [410, 12]
+                    ];
+
+                    var w = 300, h = 90, radius = 10;
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w).attr("height", h);
+
+                    // x轴和y轴方向上的比例尺
+                    var xScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset, function(d){return d[0];})])
+                            .range([0, w]);
+                    var yScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset, function(d){return d[1];})])
+                            .range([h, 0]); // 注意这里应该是 [h,0] 而不是 [0,h], 否则y轴上的数值会变成高小低大的情况
+
+                    // 画散点
+                    svg.selectAll("circle").data(dataset).enter().append("circle")
+                            .attr("cx", function(d) { return xScale(d[0]); })
+                            .attr("cy", function(d) { return yScale(d[1]); })
+                            .attr("r", radius);
+
+
+                    // 创建一个数轴, bottom指的是数字在数轴的底部, 而不是数轴在svg的底部
+                    // 并把一个比例尺关联到这个数轴上
+                    var xAxis = d3.axisBottom().scale(xScale);
+                    // 把x轴画在svg上面
+                    svg.append("g").call(xAxis);
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>这里有两点需要说明. 首先先解释一下为什么创建数轴的时候需要比例尺. 我们想一下画数轴的时候需要什么? 一个范围. 比例尺正好有范围信息(值域). 而一般在作图的时候也需要一个比例尺来将输入数据映射到数轴上(比如把1000000(人)映射成100(万人), 因此使用一个比例尺来创建数轴还是一件比较自然的事情.</p>
+    <p>接下来我们看一下svg.append("g").call(xAxis)这个调用. 这里创建的g元素是group的意思, 用于将多个svg基本元素打包在一起. call函数将前置对象(g对象)传给xAxis函数, 而xAxis函数在传进来的g对象里面进行绘图, 把数轴画在里面. 所以你使用浏览器查看元素的话, 可以看到在g元素里面画了很多子元素, 它们都是数轴的组成部分.</p>
+    <p>讲道理, 这个表太难看了. 首先, 在图表顶端的x轴太奇怪. 我们想把它移下来. 然后, 刻度未免太密集的一点, 我们在scale里面只设置了值域, 但是这个间隔是谁定的? 最后, 我们还需要一条垂直的y数轴. 把这些修改以后成了这样:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [
+                        [5, 20], [480, 90], [250, 50],
+                        [100, 33], [330, 95], [410, 12]
+                    ];
+
+                    var w = 300, h = 90, radius = 10;
+                    var margin = 10; // 在图表周围可以预留一部分空间, 防止图表不够画
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w + margin * 2).attr("height", h + margin * 2);
+
+                    var xScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset, function(d){return d[0];})])
+                            .range([0 + margin, w + margin]);
+                    var yScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset, function(d){return d[1];})])
+                            .range([h + margin, 0 + margin]);
+
+                    svg.selectAll("circle").data(dataset).enter().append("circle")
+                            .attr("cx", function(d) { return xScale(d[0]); })
+                            .attr("cy", function(d) { return yScale(d[1]); })
+                            .attr("r", radius);
+
+
+                    var xAxis = d3.axisTop().scale(xScale)
+                            .ticks(5); // 只需要五条刻度. 不过这个值只是建议, 实际画出来的分段数可能与这个值不同
+
+                    var yAxis = d3.axisRight().scale(yScale)
+                            .ticks(6);
+
+                    svg.append("g")
+                            .attr("transform", "translate(0, " + (h + margin - 1)  +")")
+                            .call(xAxis);
+
+                    svg.append("g")
+                            .attr("transform", "translate(" + margin+ ", 0)")
+                            .call(yAxis);
+                </script>
+            </body>
+        </html>
+    </textarea>
 </div>
 
 <br/><br/><br/><br/><br/><br/><br/>
