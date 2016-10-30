@@ -14,6 +14,7 @@
             border: 1px solid #eee;
             height: auto;
         }
+
         .preview {
             margin: 10px 0px 10px 0px;
             border: groove;
@@ -24,8 +25,11 @@
 
 <div>
     <h1>0. 这是什么?</h1>
-    <p>这是我个人的一个d3.js学习笔记. 现在有很多不错的d3.js教材, 网络上也有着很多相关的博客, 所以讲道理本来再写一些文章来介绍d3.js没什么意义. 但是所谓的博客就是这样: 看别人的博客很烂, 于是就决定自己写一个更烂的来恶心别人. 于是乎就有了你现在看到的这个东西. 除了这个理由以外, 由于d3.js是一个高度视觉化的东西, 我还试图把源代码和实现效果一起呈现出来, 同时还允许读者当场修改代码来做实验. 所以懒得自己动手码代码甚至下载源代码的人有福了. (当然, 事实证明光看是没有用的. 你们如果真的想学的话, 相信我你们中的某些人可能也会写一个博客出来恶心我的. 非常欢迎这样的同学哈哈)</p>
-    <p>本文的主要内容来自于<em>Interactive Data Visualization for the Web</em>这本书. 本文在保持原作主要内容的情况下, 对书的内容进行了再加工, 并加入了一些我认为比较重要的补充信息.</p>
+    <p>这是我个人的一篇d3.js学习笔记. 现在有很多不错的d3.js教材, 网络上也有着很多相关的博客, 所以讲道理本来再写一些文章来介绍d3.js没什么意义. 但是所谓的博客就是这样: 看别人的博客很烂,
+        于是就决定自己写一个更烂的来恶心别人. 于是乎就有了你现在看到的这个东西. 除了这个理由以外, 由于d3.js是一个高度视觉化的东西, 我还试图把源代码和实现效果一起呈现出来, 同时还允许读者当场修改代码来做实验.
+        所以懒得自己动手码代码甚至下载源代码的人有福了. (当然, 事实证明光看是没有用的. 你们如果真的想学的话, 相信我你们中的某些人可能也会写一个博客出来恶心我的. 非常欢迎这样的同学哈哈)</p>
+    <p>本文的主要内容来自于<em>Interactive Data Visualization for the Web</em>这本书. 本文在保持原作主要内容的情况下, 对书的内容进行了再加工,
+        并加入了一些我认为比较重要的补充信息.</p>
 </div>
 
 <div>
@@ -61,15 +65,18 @@
                             .data(dataset)      // 将数据关联到(空)选择集上面
                             .enter()            // 非常关键的一步, 为没有元素对应的数据创建一个占位元素
                             .append("p")        // 向占位元素中填充实际的元素
-                            .text(function(d){  // 使用回调函数的方式填充文本内容
+                            .text(function (d) {  // 使用回调函数的方式填充文本内容
                                 return d;       // 返回数据本身
                             });
                 </script>
             </body>
         </html>
     </textarea>
-    <p>在这里我们把一个数组给转化成了一堆p元素, 而元素内部的文本就是数组内的各个数字. 需要专门说一下的是enter()方法. 当我们把数据集绑定到元素集上面的时候, 两者很可能不是一一对应的. 在现在这个例子中, 数据集有6个数据, 但是元素集是空的. 这个时候我们就需要为哪些没有对应元素的数据创建html元素, 而完成这个功能的方法就是enter().</p>
-    <p>具体而言, enter()方法的作用的是, 为当前选择集中没有绑定元素的数据创建一个占位元素. 这个占位元素实际上指向的是当前要插入元素的父元素(在这个例子中其实就是body元素). 所以接下来调用append("p")其实就是向body元素中插入p元素,并返回插入的p元素. 接下来的事情就很简单了, 设置文本的时候可以指定一个回调函数. 回调函数的入参就是这个元素对应的数据项(datum), 你可以做任何处理以后返回, 我在这里什么也没做就返回了, 目的其实就是为了取得数据项本身. 在完成绑定后, 数据被存储到了对应元素的__data__字段上.</p>
+    <p>在这里我们把一个数组给转化成了一堆p元素, 而元素内部的文本就是数组内的各个数字. 需要专门说一下的是enter()方法. 当我们把数据集绑定到元素集上面的时候, 两者很可能不是一一对应的. 在现在这个例子中,
+        数据集有6个数据, 但是元素集是空的. 这个时候我们就需要为哪些没有对应元素的数据创建html元素, 而完成这个功能的方法就是enter().</p>
+    <p>具体而言, enter()方法的作用的是, 为当前选择集中没有绑定元素的数据创建一个占位元素. 这个占位元素实际上指向的是当前要插入元素的父元素(在这个例子中其实就是body元素).
+        所以接下来调用append("p")其实就是向body元素中插入p元素,并返回插入的p元素. 接下来的事情就很简单了, 设置文本的时候可以指定一个回调函数. 回调函数的入参就是这个元素对应的数据项(datum),
+        你可以做任何处理以后返回, 我在这里什么也没做就返回了, 目的其实就是为了取得数据项本身. 在完成绑定后, 数据被存储到了对应元素的__data__字段上.</p>
     <p>除了设置文本以外, 还可以添加attributes或者style, 比如我们想让奇数序号的数据显示成红色, 偶数序号的数字显示成蓝色, 可以这样干:</p>
     <textarea class="code">
         <html>
@@ -83,22 +90,24 @@
                             .data(dataset)      // 将数据关联到(空)选择集上面
                             .enter()            // 非常关键的一步, 为没有元素对应的数据创建一个占位元素
                             .append("p")        // 向占位元素中填充实际的元素
-                            .text(function(d){  // 使用回调函数的方式填充文本内容
+                            .text(function (d) {  // 使用回调函数的方式填充文本内容
                                 return d;       // 返回数据本身
                             })
-                            .attr('style', function(d, i){
-                                if( i%2 == 0 ) return 'color: blue';
+                            .attr('style', function (d, i) {
+                                if (i % 2 == 0) return 'color: blue';
                                 return 'color: red';
                             })                  // 使用attr()设置style
-                            .style('color', function(d, i){
-                                if( i%2 == 0 ) return 'blue';
+                            .style('color', function (d, i) {
+                                if (i % 2 == 0) return 'blue';
                                 return 'red';
                             });                 // 如果只是想设置style的话也可以直接使用style()语法糖来直接设置. 这两句话在功能上是等价的, 这里重复设置了
                 </script>
             </body>
         </html>
     </textarea>
-    <p>眼尖的同学可能发现一个问题, 当selectAll返回占位符的时候, 我们可以使用append来添加真正的元素. 那么我们只要在append的时候指定元素类型就可以了, 在selectAll()里面指定的标签类型是不是没什么用? 从这个例子上讲, 是的. 你把selectAll("a")在这个例子中不会对显示结果产生任何影响. 但是我们这个操作的语义是"选择所有body下面的p元素, 如果不够再加, 加的元素是p元素". 如果我们换成了selectAll("a"), 语义就发生了变化. 有时候就不能符合我们的需求了. 因此请在select和append这两个地方保持一致.</p>
+    <p>眼尖的同学可能发现一个问题, 当selectAll返回占位符的时候, 我们可以使用append来添加真正的元素. 那么我们只要在append的时候指定元素类型就可以了,
+        在selectAll()里面指定的标签类型是不是没什么用? 从这个例子上讲, 是的. 你把selectAll("a")在这个例子中不会对显示结果产生任何影响. 但是我们这个操作的语义是"选择所有body下面的p元素,
+        如果不够再加, 加的元素是p元素". 如果我们换成了selectAll("a"), 语义就发生了变化. 有时候就不能符合我们的需求了. 因此请在select和append这两个地方保持一致.</p>
 </div>
 
 <div>
@@ -108,7 +117,7 @@
         <html>
             <head>
                 <style>
-                    .bar{
+                    .bar {
                         display: inline-block; /* 让bar元素可以横向排放,方式可以设置高度. 所以这里只能使用inline-block */
                         width: 20px;
                         height: 75px;
@@ -124,14 +133,14 @@
                     var dataset = [20, 33, 58, 90, 40, 50];
 
                     d3.select("body")
-                        .selectAll("p")
-                        .data(dataset)
-                        .enter()
-                        .append("div")
-                        .attr("class", "bar")
-                        .style('height', function(d){
-                            return d + 'px'; // 使用对应数值作为高度
-                        });
+                            .selectAll("p")
+                            .data(dataset)
+                            .enter()
+                            .append("div")
+                            .attr("class", "bar")
+                            .style('height', function (d) {
+                                return d + 'px'; // 使用对应数值作为高度
+                            });
                 </script>
             </body>
         </html>
@@ -156,7 +165,7 @@
                     var barMargin = 1; // 现在放在代码里了
 
                     // 一个svg元素
-                    var svg = d3.select("body") .append("svg")
+                    var svg = d3.select("body").append("svg")
                             .attr("width", w)
                             .attr("height", h);
 
@@ -165,13 +174,13 @@
                             .data(dataset)
                             .enter()
                             .append("rect")
-                            .attr("x", function(d, i) {
+                            .attr("x", function (d, i) {
                                 return (barWidth + barMargin) * i;
                             })
-                            .attr("y", function(d){
+                            .attr("y", function (d) {
                                 return h - d;
                             })
-                            .attr("height", function(d) {
+                            .attr("height", function (d) {
                                 return d;
                             })
                             .attr('width', barWidth)
@@ -202,14 +211,14 @@
                     // 添加柱形
                     svg.selectAll("rect").data(dataset).enter()
                             .append("rect")
-                            .attr("x", function(d, i) {
+                            .attr("x", function (d, i) {
                                 return (barWidth + barMargin) * i;
                             })
-                            .attr("y", function(d){
+                            .attr("y", function (d) {
                                 // 额外下移标签预留高度
                                 return h - d + fontHeight;
                             })
-                            .attr("height", function(d) {
+                            .attr("height", function (d) {
                                 return d;
                             })
                             .attr('width', barWidth)
@@ -220,14 +229,14 @@
                     // 添加标签
                     svg.selectAll("text").data(dataset).enter()
                             .append("text")
-                            .attr("x", function(d, i) {
+                            .attr("x", function (d, i) {
                                 return (barWidth + barMargin) * i + fontOffsetX;
                             })
-                            .attr("y", function(d){
+                            .attr("y", function (d) {
                                 // h + fontHeight 是当前svg的总高度
                                 return (h + fontHeight) - d + fontOffsetY;
                             })
-                            .text(function(d){
+                            .text(function (d) {
                                 return d
                             });
                 </script>
@@ -236,13 +245,113 @@
     </textarea>
 </div>
 
-<br /><br /><br /><br /><br /><br /><br />
-<br /><br /><br /><br /><br /><br /><br />
-<br /><br /><br /><br /><br /><br /><br />
-<br /><br /><br /><br /><br /><br /><br />
+<div>
+    <h1>5. 比例尺</h1>
+    <p>我们现在画出的图中, 尺寸都是直接来自于数据的. 比如50就变成了50px. 那要是数据是50000呢? 这是就需要手动换算成50px来显示, 否则图会非常大. d3自带了这样的转换功能, 叫做比例尺. 所谓比例尺就是一个函数, 可以将一个范围内的数据以某种规则转换成另一个范围内的数据. 来看一个例子. 这次我们不画柱状图了, 换个散点图画画:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [
+                        [5, 20], [480, 90], [250, 50],
+                        [100, 33], [330, 95], [410, 12]
+                    ];
+
+                    // 设置一个比较小的svg尺寸, 有些点将不能显示在图像上
+                    var w = 300, h = 90;
+                    var radius = 10; // 散点半径
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            .attr("height", h);
+
+                    svg.selectAll("circle")
+                            .data(dataset)
+                            .enter()
+                            .append("circle")
+                            .attr("cx", function(d) {
+                                return d[0];
+                            })
+                            .attr("cy", function(d) {
+                                return d[1];
+                            })
+                            .attr("r", radius);
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>我们在这里画了一个简单的散点图, 将一组坐标转换成了点. 现在的问题是, 我们发现有些点由于出了边界没有显示出来(总共六个点但只显示出来3个). 我们可以用比例尺来解决这个问题:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [
+                        [5, 20], [480, 90], [250, 50],
+                        [100, 33], [330, 95], [410, 12]
+                    ];
+
+                    var w = 300, h = 90;
+                    var radius = 10; // 散点半径
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            .attr("height", h);
+
+                    // 创建一个x轴方向上的线性比例尺, 返回值是一个可以直接调用的函数
+                    var xScale = d3.scaleLinear()
+                            // 设置比例尺的定义域
+                            .domain([
+                                0,
+                                // 用数据集中最大的x坐标作为定义域右界
+                                d3.max(dataset, function(d) {
+                                    return d[0]; })
+                            ])
+                            // 设置比例尺的值域, 右界是svg的宽度
+                            .range([0, w]);
+
+                    // 同上, 设置y轴方向上的比例尺
+                    var yScale = d3.scaleLinear()
+                            .domain([
+                                0,
+                                d3.max(dataset, function(d) {
+                                    return d[1]; })
+                            ])
+                            .range([0, h]);
+
+                    svg.selectAll("circle")
+                            .data(dataset)
+                            .enter()
+                            .append("circle")
+                            .attr("cx", function(d) {
+                                // x轴缩放, 将x值按比例映射成x轴比例尺上的尺寸
+                                return xScale(d[0]);
+                            })
+                            .attr("cy", function(d) {
+                                // y轴缩放
+                                return yScale(d[1]);
+                            })
+                            .attr("r", radius);
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>这样六个点就全部显示出来了. 之所以有些点只显示了一部分是因为圆是使用圆心来指定坐标的. 我们保证的只是圆心经过比例尺的转换后能放进svg里面.</p>
+    <p>我们在这里只讨论了线性比例尺. 其他类型的比例尺(比如平方根比例尺或者序数比例尺)可以参考相关文档.</p>
+</div>
+
+<br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/>
 
 <script>
-    function resizeIframe(obj){
+    function resizeIframe(obj) {
         obj.style.height = 0;
         obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
     }
@@ -252,7 +361,7 @@
     // However, these indentations will result in some extra blanks
     // in source editors on the web pages seem by readers
     // So these indentations should be removed before shown in source editors
-    function eliminate_extra_indent(code){
+    function eliminate_extra_indent(code) {
         // currently only white spaces are supported
         // so do not use tab in code indentation
         var indent = code.match(/^((?: )*)\S/)[1];
@@ -263,7 +372,7 @@
     }
 
     var codeBlocks = document.querySelectorAll('.code');
-    for(var i=0; i<codeBlocks.length; i++){
+    for (var i = 0; i < codeBlocks.length; i++) {
         var block = codeBlocks[i];
         block.textContent = eliminate_extra_indent(block.textContent);
 
@@ -282,8 +391,8 @@
             mode: "htmlmixed"
         });
 
-        !function(iframe, mirror){
-            mirror.on('change', function(){
+        !function (iframe, mirror) {
+            mirror.on('change', function () {
                 var html = mirror.getValue();
                 iframe.setAttribute('srcdoc', html);
             });
