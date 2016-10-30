@@ -98,11 +98,12 @@
             </body>
         </html>
     </textarea>
+    <p>眼尖的同学可能发现一个问题, 当selectAll返回占位符的时候, 我们可以使用append来添加真正的元素. 那么我们只要在append的时候指定元素类型就可以了, 在selectAll()里面指定的标签类型是不是没什么用? 从这个例子上讲, 是的. 你把selectAll("a")在这个例子中不会对显示结果产生任何影响. 但是我们这个操作的语义是"选择所有body下面的p元素, 如果不够再加, 加的元素是p元素". 如果我们换成了selectAll("a"), 语义就发生了变化. 有时候就不能符合我们的需求了. 因此请在select和append这两个地方保持一致.</p>
 </div>
 
 <div>
     <h1>3. 简单绘图</h1>
-    <p>我们已经学习了如何进行数据绑定了. 现在我们回头想想, 一个图表到底怎么画? 很简单, 其实使用html元素的堆砌就可以了. 对于任何一个了解前端的程序员来说都是已经知道的东西. 不相信的话我们试试看.</p>
+    <p>我们已经学习了如何进行数据绑定了. 现在我们回头想想, 一个图表到底怎么画? 很简单, 其实使用html元素来堆砌就可以了. 对于任何一个了解前端的程序员来说都是已经知道的东西. 不相信的话我们试试看.</p>
     <textarea class="code">
         <html>
             <head>
@@ -119,25 +120,120 @@
             <body>
                 <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
                 <script>
-                     var dataset = [];
-                     for(var i=0; i<10; i++){
-                         dataset.push(Math.random() * 100)
-                     }
+                    // 任意数据
+                    var dataset = [20, 33, 58, 90, 40, 50];
 
-                     d3.select("body")
-                            .selectAll("p")
+                    d3.select("body")
+                        .selectAll("p")
+                        .data(dataset)
+                        .enter()
+                        .append("div")
+                        .attr("class", "bar")
+                        .style('height', function(d){
+                            return d + 'px'; // 使用对应数值作为高度
+                        });
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>搞定. 其实就是把数据映射到了某个长度的div上面了而已. 由于每个div都是inline-block的, 整行的高度由最高的那个元素决定, 其他的元素就全部紧贴行底排列了. 这样看来画个柱状图也不难嘛!</p>
+</div>
+
+<div>
+    <h1>4. 你好, SVG</h1>
+    <p>上一节我们已经学了该怎么使用div来画柱状图, 看起来好像不难. 但是如果我们要画更复杂的东西, 光靠堆砌html元素是很麻烦的, 单是写CSS就要花费非常多的功夫. 况且绝大部分html元素是为呈现文档而设计的, 本身并不适合拿来作图. 这个时候我们可以用SVG来画图, 把刚才的例子拿SVG重写一下就成了这样:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [20, 33, 58, 90, 40, 50];
+
+                    var w = 500, h = 100;
+                    var barWidth = 20; // 原来放在CSS里面的布局信息
+                    var barMargin = 1; // 现在放在代码里了
+
+                    // 一个svg元素
+                    var svg = d3.select("body") .append("svg")
+                            .attr("width", w)
+                            .attr("height", h);
+
+                    // 向svg中填充矩形元素
+                    svg.selectAll("rect")
                             .data(dataset)
                             .enter()
-                            .append("div")
-                            .attr("class", "bar")
-                            .style('height', function(d){
-                                return d + 'px'; // 使用对应数值作为高度
+                            .append("rect")
+                            .attr("x", function(d, i) {
+                                return (barWidth + barMargin) * i;
+                            })
+                            .attr("y", function(d){
+                                return h - d;
+                            })
+                            .attr("height", function(d) {
+                                return d;
+                            })
+                            .attr('width', barWidth)
+                            .attr("fill", "teal");
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>svg本身也是一个html标签. 在svg标签里面可以通过添加svg元素来实现矢量绘图, 包括使用属性直接指定坐标,大小, 颜色等信息. 看起来和上一个例子一模一样, 但是我们由于已经拿svg重写了, 所以后面如果要加内容的话就可以通过添加svg元素的方式来实现, 相对于通用的html元素来说, 因为不再需要考虑布局方式等问题, 使用svg元素来绘图要方便得多. svg元素在很多用词上和css相同, 因此还是很容易学习的.</p>
+    <p>现在我们来给柱状图添加标签, 以此来表示每条的值是多少(当前我们只能用长度来表示数值,不够精确):</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [20, 33, 58, 90, 40, 50];
+                    var w = 500, h = 100; // 图形部分尺寸
+                    var barWidth = 20, barMargin = 1;
+                    var fontHeight = 10; // 标签预留高度
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            // 留一点长度给标签, 否则标签可能会没地方显示
+                            .attr("height", h + fontHeight);
+
+                    // 添加柱形
+                    svg.selectAll("rect").data(dataset).enter()
+                            .append("rect")
+                            .attr("x", function(d, i) {
+                                return (barWidth + barMargin) * i;
+                            })
+                            .attr("y", function(d){
+                                // 额外下移标签预留高度
+                                return h - d + fontHeight;
+                            })
+                            .attr("height", function(d) {
+                                return d;
+                            })
+                            .attr('width', barWidth)
+                            .attr("fill", "teal");
+
+                    var fontOffsetX = 2; // 微调标签位置, 让显示更自然
+                    var fontOffsetY = -4;
+                    // 添加标签
+                    svg.selectAll("text").data(dataset).enter()
+                            .append("text")
+                            .attr("x", function(d, i) {
+                                return (barWidth + barMargin) * i + fontOffsetX;
+                            })
+                            .attr("y", function(d){
+                                // h + fontHeight 是当前svg的总高度
+                                return (h + fontHeight) - d + fontOffsetY;
+                            })
+                            .text(function(d){
+                                return d
                             });
                 </script>
             </body>
         </html>
     </textarea>
-    <p>搞定. 其实就是把数据映射到了某个长度的div上面了而已. 由于每个div都是inline-block的, 整行的高度由最高的那个元素决定, 其他的元素就全部紧贴行底排列了.</p>
 </div>
 
 <br /><br /><br /><br /><br /><br /><br />
