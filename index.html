@@ -441,6 +441,394 @@
     </textarea>
 </div>
 
+<div>
+    <h1>7. 更新</h1>
+    <p>既然学了比例尺, 我们先把之前的柱状图重写一下吧. 主要介绍一个叫做band scale的东西:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var dataset = [20, 33, 58, 90, 40, 50, 10, 87, 60, 70];
+                    var w = 500, h = 100; // 图形部分尺寸
+                    var fontHeight = 10; // 标签预留高度
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            .attr("height", h + fontHeight);
+
+                    // 这里创建了一个band scale, 而不是之前的linear scale
+                    // band scale的定义域和值域都是离散集合, 依次逐个对应
+                    var scale = d3.scaleBand()
+                            // 设定值域和定义域
+                            .domain(d3.range(dataset.length))
+                            .rangeRound([0, w])
+                            // 分配band之间的padding, 这里的数字是比例
+                            .paddingInner(0.05);
+
+                    // 添加柱形
+                    svg.selectAll("rect").data(dataset).enter()
+                            .append("rect")
+                            .attr("x", function (d, i) {
+                                return scale(i);
+                            })
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .attr("height", function (d) {
+                                return d;
+                            })
+                            // 直接得到每个band的宽度
+                            .attr('width', scale.bandwidth())
+                            .attr("fill", "teal");
+
+                    // 添加标签
+                    svg.selectAll("text").data(dataset).enter()
+                            .append("text")
+                            .attr("x", function (d, i) {
+                                return scale(i) + scale.bandwidth()/2;
+                            })
+                            // 标签居中, 效果是让文本的正中间对准x坐标
+                            .attr("text-anchor", "middle")
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .text(function (d) {
+                                return d
+                            });
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>这里的比例尺用的是band scale. 我们之前熟悉的是linear scale, 是将定义域和值域进行线性映射. 而band scale与之不同, 进行的是两个离散集合之间的映射. 集合映射指的是, 比如定义域设定为[7,4,3,12], 值域设置为[500,100,200,45], 那么4就会映射到100上面, 两个数字在各自的集合中都是第二个元素. 这种比例尺称为序数比例尺. band scale就是一种序数比例尺, 只不过band scale的设定方式稍微复杂一点. 在我们的例子中, 定义域的设定方式是domain(d3.range(dataset.length)), 其中d3.range()是一个语法糖, 将输入数字转换为一组连续数字的数组, 比如5转换为[1,2,3,4,5]. 在设定值域的时候, 比如rangeRound([0, w]), 传入的是一个区间, 然后d3会把这个区间分成n份, n是定义域集合的长度, 然后就近取整, 然后每份的左边界构成了一个值域集合. 最终band scale就是在这两个集合之间进行映射. 使用bandwidth()方法可以获得每份的宽度. 如果需要, 可以在设定映射的时候使用paddingInner()方法在每个band之间留白, 参数是一个百分比. 使用了序数比例尺之后, 我们的柱状图宽度就可以自适应了, 不再需要额外指定宽度以及padding.</p>
+    <p>我们这一节的目的是来尝试数据的更新. 所以我们加一个按钮来生成随机数组并将数据更新到我们的图表上:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <button id="updateBtn">更新</button>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    // 生成随机数组
+                    var randomArray = function (len){
+                        var arr = [];
+                        for(var i=0; i<len; i++){
+                            arr.push(Math.floor(Math.random() * 100));
+                        }
+                        return arr;
+                    };
+                    // 更新图表函数, 看起来好像内容和创建svg元素是重复的
+                    // 但是这个方法里面没有调用enter()和append()函数, 因为这个方法用于更新而不是创建
+                    var update = function(dataset){
+                        // 更新柱形
+                        svg.selectAll("rect").data(dataset)
+                                .attr("x", function (d, i) {
+                                    return scale(i);
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .attr("height", function (d) {
+                                    return d;
+                                })
+                                // 直接得到每个band的宽度
+                                .attr('width', scale.bandwidth());
+
+                        // 更新标签
+                        svg.selectAll("text").data(dataset)
+                                .attr("x", function (d, i) {
+                                    return scale(i) + scale.bandwidth()/2;
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .text(function (d) {
+                                    return d
+                                });
+                    };
+
+                    var w = 500, h = 100, fontHeight = 10;
+                    var datasetLength = 10; // 数据集长度
+                    var dataset = randomArray(datasetLength);
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            .attr("height", h + fontHeight);
+                    var scale = d3.scaleBand()
+                            .domain(d3.range(datasetLength))
+                            .rangeRound([0, w])
+                            .paddingInner(0.05);
+
+                    // 添加柱形
+                    svg.selectAll("rect").data(dataset)
+                            .enter().append("rect") // 创建的时候需要调用这两个方法, 更新的时候不要加, 否则将会无法更新, 因为enter()方法会返回empty selection
+                            .attr("x", function (d, i) {
+                                return scale(i);
+                            })
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .attr("height", function (d) {
+                                return d;
+                            })
+                            // 直接得到每个band的宽度
+                            .attr('width', scale.bandwidth())
+                            .attr("fill", "teal");
+
+                    // 添加标签
+                    svg.selectAll("text").data(dataset).enter()
+                            .append("text")
+                            .attr("x", function (d, i) {
+                                return scale(i) + scale.bandwidth()/2;
+                            })
+                            // 标签居中, 效果是让文本的正中间对准x坐标
+                            .attr("text-anchor", "middle")
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .text(function (d) {
+                                return d
+                            });
+
+                    // 更新图表
+                    update(randomArray(datasetLength));
+
+                    // 更新按钮
+                    document.getElementById('updateBtn').onclick = function(){
+                        update(randomArray(datasetLength));
+                    };
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>效果不错. 现在我们要做一件很厉害的事情了: 将数据变化这个过程动画化. 方法很简单, 加一行代码就行:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <button id="updateBtn">更新</button>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var randomArray = function (len){
+                        var arr = [];
+                        for(var i=0; i<len; i++){
+                            arr.push(Math.floor(Math.random() * 100));
+                        }
+                        return arr;
+                    };
+
+                    var update = function(dataset){
+                        svg.selectAll("rect").data(dataset)
+                                .transition() // 这一行会添加动画效果!
+                                .duration(1000) // (可选)设定动画时长
+                                .attr("x", function (d, i) {
+                                    return scale(i);
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .attr("height", function (d) {
+                                    return d;
+                                })
+                                .attr('width', scale.bandwidth());
+
+                        svg.selectAll("text").data(dataset)
+                                .transition() // 这一行会添加动画效果!
+                                .duration(3000) // (可选)设定动画时长
+                                .attr("x", function (d, i) {
+                                    return scale(i) + scale.bandwidth()/2;
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .text(function (d) {
+                                    return d
+                                });
+                    };
+
+                    var w = 500, h = 100, fontHeight = 10, datasetLength = 10;
+                    var dataset = randomArray(datasetLength);
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            .attr("height", h + fontHeight);
+                    var scale = d3.scaleBand()
+                            .domain(d3.range(datasetLength))
+                            .rangeRound([0, w])
+                            .paddingInner(0.05);
+
+                    svg.selectAll("rect").data(dataset)
+                            .enter().append("rect")
+                            .attr("x", function (d, i) {
+                                return scale(i);
+                            })
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .attr("height", function (d) {
+                                return d;
+                            })
+                            .attr('width', scale.bandwidth())
+                            .attr("fill", "teal");
+
+                    svg.selectAll("text").data(dataset).enter()
+                            .append("text")
+                            .attr("x", function (d, i) {
+                                return scale(i) + scale.bandwidth()/2;
+                            })
+                            .attr("text-anchor", "middle")
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .text(function (d) {
+                                return d
+                            });
+
+                    update(randomArray(datasetLength));
+                    document.getElementById('updateBtn').onclick = function(){
+                        update(randomArray(datasetLength));
+                    };
+                </script>
+            </body>
+        </html>
+    </textarea>
+    <p>d3实现这种动画的方式就是插值. 在原数值和新数值之间插入许多中间值即可. 效果还是很炫酷的. 但是到目前为止我们还没有解决一个问题: 如果我们创建图表时的数据集和更新的时候的数据集个数不一致的时候该怎么处理? 看这个例子:</p>
+    <textarea class="code">
+        <html>
+            <head>
+            </head>
+            <body>
+                <button id="addBtn">添加</button>
+                <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
+                <script>
+                    var w = 500, h = 100, fontHeight = 10, datasetLength = 10;
+                    var dataset = [];
+                    for(var i=0; i<datasetLength; i++){
+                        dataset.push(Math.floor(Math.random() * 100));
+                    }
+
+                    var svg = d3.select("body").append("svg")
+                            .attr("width", w)
+                            .attr("height", h + fontHeight);
+
+                    var scale = d3.scaleBand()
+                            .domain(d3.range(datasetLength))
+                            .rangeRound([0, w])
+                            .paddingInner(0.05);
+
+                    var rects = svg.selectAll("rect").data(dataset);
+                    var texts = svg.selectAll("text").data(dataset);
+
+                    // 创建矩形
+                    rects.enter().append("rect")
+                            .attr("x", function (d, i) {
+                                return scale(i);
+                            })
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .attr("height", function (d) {
+                                return d;
+                            })
+                            .attr('width', scale.bandwidth())
+                            .attr("fill", "teal");
+
+                    // 创建标签
+                    texts.enter().append("text")
+                            .attr("text-anchor", "middle")
+                            .attr("x", function (d, i) {
+                                return scale(i) + scale.bandwidth()/2;
+                            })
+                            .attr("y", function (d) {
+                                return h - d + fontHeight;
+                            })
+                            .text(function (d) {
+                                return d
+                            });
+
+                    var update = function(){
+                        // recaculate scale
+                        scale = d3.scaleBand()
+                                .domain(d3.range(datasetLength))
+                                .rangeRound([0, w])
+                                .paddingInner(0.05);
+
+                        var bandWidth = scale.bandwidth();
+
+                        rects = svg.selectAll("rect").data(dataset);
+                        texts = svg.selectAll("text").data(dataset);
+
+                        // 创建不够的矩形
+                        rects.enter().append("rect")
+                                .attr("x", function (d, i) {
+                                    return scale(i);
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .attr("height", function (d) {
+                                    return d;
+                                })
+                                .attr('width', bandWidth)
+                                .attr("fill", "teal");
+
+                        // 创建不够的标签
+                        texts.enter().append("text")
+                                .attr("text-anchor", "middle")
+                                .attr("x", function (d, i) {
+                                    return scale(i) + bandWidth/2;
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .text(function (d) {
+                                    return d
+                                });
+
+                        // 修改现有矩形
+                        rects.data(dataset)
+                                .transition()
+                                .attr("x", function (d, i) {
+                                    return scale(i);
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .attr("height", function (d) {
+                                    return d;
+                                })
+                                .attr('width', bandWidth);
+
+                        // 修改现有标签
+                        texts.data(dataset)
+                                .transition()
+                                .attr("text-anchor", "middle")
+                                .attr("x", function (d, i) {
+                                    return scale(i) + bandWidth/2;
+                                })
+                                .attr("y", function (d) {
+                                    return h - d + fontHeight;
+                                })
+                                .text(function (d) {
+                                    return d
+                                });
+                    };
+
+                    document.getElementById('addBtn').onclick = function(){
+                        dataset.push(Math.floor(Math.random() * 100));
+                        datasetLength = dataset.length;
+                        update(dataset);
+                    };
+                </script>
+            </body>
+        </html>
+    </textarea>
+</div>
+
 <br/><br/><br/><br/><br/><br/><br/>
 <br/><br/><br/><br/><br/><br/><br/>
 <br/><br/><br/><br/><br/><br/><br/>
