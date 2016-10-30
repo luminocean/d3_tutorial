@@ -119,8 +119,12 @@
             <body>
                 <script src="https://cdn.bootcss.com/d3/4.2.8/d3.min.js"></script>
                 <script>
-                    var dataset = [10, 25, 33, 16, 50, 14];
-                    d3.select("body")
+                     var dataset = [];
+                     for(var i=0; i<10; i++){
+                         dataset.push(Math.random() * 100)
+                     }
+
+                     d3.select("body")
                             .selectAll("p")
                             .data(dataset)
                             .enter()
@@ -182,10 +186,12 @@
             mode: "htmlmixed"
         });
 
-        mirror.on('change', function(){
-            var html = mirror.getValue();
-            iframe.src = 'data:text/html;charset=utf-8,' + encodeURI(html);
-        });
+        !function(iframe, mirror){
+            mirror.on('change', function(){
+                var html = mirror.getValue();
+                iframe.setAttribute('srcdoc', html);
+            });
+        }(iframe, mirror);
     }
 </script>
 </body>
